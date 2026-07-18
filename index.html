@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitácora Plaza China</title>
+
+<link rel="icon" type="image/png" href="icono.png">
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{
+font-family:Arial;
+text-align:center;
+background:#eee;
+margin:0;
+}
+
+header{
+background:#f5a400;
+padding:15px;
+font-size:30px;
+font-weight:bold;
+color:white;
+}
+
+select,button{
+padding:12px;
+font-size:18px;
+margin:5px;
+}
+
+#reader{
+width:300px;
+margin:auto;
+}
+
+.evento{
+width:140px;
+background:#f5a400;
+border:none;
+border-radius:8px;
+}
+
+#adminBtn{
+display:block;
+margin:40px auto 20px auto;
+background:#555;
+color:white;
+border:none;
+border-radius:8px;
+padding:12px 20px;
+}
+</style>
+</head>
+
+<body>
+
+<img src="logo.png" width="300">
+
+<header>Bitácora</header>
+
+<br>
+
+<div id="contenedorEmpleado">
+
+<select id="empleado">
+<option value="">Seleccione su nombre...</option>
+<option>Sharai</option>
+<option>Kristal</option>
+<option>Majo</option>
+<option>Gaby</option>
+<option>Sofy</option>
+<option>Liss</option>
+<option>Miriam</option>
+<option>Yasuri</option>
+<option>Enrique</option>
+<option>Jorge</option>
+<option>Jose</option>
+<option>Sr Erick Joel</option>
+</select>
+
+<h3 id="empleadoTexto" style="display:none;"></h3>
+
+</div>
+
+<br><br>
+
+<button onclick="iniciarQR()">
+Escanear QR
+</button>
+
+<div id="reader"></div>
+
+<h3 id="codigo"></h3>
+
+<br>
+
+<button class="evento" onclick="guardar('Entrada')">Entrada</button>
+<button class="evento" onclick="guardar('Comer')">Comer</button>
+
+<br>
+
+<button class="evento" onclick="guardar('Retorno')">Retorno</button>
+<button class="evento" onclick="guardar('Salida')">Salida</button>
+
+<button id="adminBtn" onclick="abrirAdmin()">Administrador</button>
+
+<div id="adminPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:10px;box-shadow:0 0 20px rgba(0,0,0,.3);z-index:9999;">
+
+<h3>Ingrese clave</h3>
+
+<div id="claveVisual" style="font-size:28px;letter-spacing:10px;margin-bottom:15px;height:35px;"></div>
+
+<div style="display:grid;grid-template-columns:repeat(3,70px);gap:8px;justify-content:center;">
+<button onclick="agregarNumero('1')">1</button>
+<button onclick="agregarNumero('2')">2</button>
+<button onclick="agregarNumero('3')">3</button>
+<button onclick="agregarNumero('4')">4</button>
+<button onclick="agregarNumero('5')">5</button>
+<button onclick="agregarNumero('6')">6</button>
+<button onclick="agregarNumero('7')">7</button>
+<button onclick="agregarNumero('8')">8</button>
+<button onclick="agregarNumero('9')">9</button>
+<button onclick="borrarNumero()">←</button>
+<button onclick="agregarNumero('0')">0</button>
+<button onclick="validarClave()">OK</button>
+</div>
+
+<br>
+<button onclick="cerrarAdmin()">Cancelar</button>
+</div>
+
+<script>
+
+let qrLeido = "";
+let claveIngresada = "";
+
+window.onload = function() {
+
+    const empleadoGuardado = localStorage.getItem("empleado");
+
+    if (empleadoGuardado) {
+        document.getElementById("empleado").style.display = "none";
+
+        const texto = document.getElementById("empleadoTexto");
+        texto.style.display = "block";
+        texto.innerHTML = "Empleado: <b>" + empleadoGuardado + "</b>";
+    }
+};
+
+document.getElementById("empleado").addEventListener("change", function() {
+
+    if(this.value === "") return;
+
+    localStorage.setItem("empleado", this.value);
+
+    alert("Se asignó el empleado correctamente");
+
+    this.style.display = "none";
+
+    const texto = document.getElementById("empleadoTexto");
+    texto.style.display = "block";
+    texto.innerHTML = "Empleado: <b>" + this.value + "</b>";
+});
+
+function iniciarQR(){
+
+const html5QrCodeScanner = new Html5QrcodeScanner(
+"reader",
+{ fps:10, qrbox:250 }
+);
+
+html5QrCodeScanner.render(
+(texto)=>{
+
+qrLeido = texto;
+
+document.getElementById("codigo").innerHTML =
+"QR leído correctamente !!!";
+
+html5QrCodeScanner.clear();
+
+}
+);
+
+}
+
+async function guardar(evento){
+
+if(qrLeido == ""){
+alert("Primero escanea un QR");
+return;
+}
+
+const empleado =
+localStorage.getItem("empleado") ||
+document.getElementById("empleado").value;
+
+if(empleado == ""){
+alert("Seleccione su nombre");
+return;
+}
+
+const url =
+"https://script.google.com/macros/s/AKfycbzTlksHS2L5to9ixT1Dto31x7mMLkVO1Ipeqx88V1rUkpdHdfIEG2e7n68mXxKp8KkA/exec" +
+"?tienda=" + encodeURIComponent(qrLeido) +
+"&empleado=" + encodeURIComponent(empleado) +
+"&evento=" + encodeURIComponent(evento);
+
+const respuesta = await fetch(url); 
+const mensaje = await respuesta.text(); 
+
+alert(mensaje); 
+qrLeido = ""; 
+document.getElementById("codigo").innerHTML = "";
+
+}
+
+function abrirAdmin(){
+claveIngresada="";
+document.getElementById("claveVisual").innerHTML="";
+document.getElementById("adminPanel").style.display="block";
+}
+
+function cerrarAdmin(){
+document.getElementById("adminPanel").style.display="none";
+}
+
+function agregarNumero(num){
+if(claveIngresada.length>=4) return;
+claveIngresada += num;
+document.getElementById("claveVisual").innerHTML="*".repeat(claveIngresada.length);
+}
+
+function borrarNumero(){
+claveIngresada = claveIngresada.slice(0,-1);
+document.getElementById("claveVisual").innerHTML="*".repeat(claveIngresada.length);
+}
+
+function validarClave(){
+
+if(claveIngresada === "2126"){
+
+localStorage.removeItem("empleado");
+
+document.getElementById("empleado").value = "";
+document.getElementById("empleado").style.display = "inline-block";
+document.getElementById("empleadoTexto").style.display = "none";
+
+cerrarAdmin();
+
+alert("Modo administrador activado");
+
+}else{
+
+alert("Clave incorrecta");
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
